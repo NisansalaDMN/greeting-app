@@ -1,12 +1,13 @@
 const http = require("http");
 const fs = require("fs");
 const querystring = require("querystring");
+const { exec } = require("child_process");
 
 let userName = "";
 
 const server = http.createServer((req, res) => {
 
-    // GET request - show form
+    // Home page
     if (req.method === "GET" && req.url === "/") {
         fs.readFile("index.html", (err, data) => {
             res.writeHead(200, { "Content-Type": "text/html" });
@@ -14,32 +15,45 @@ const server = http.createServer((req, res) => {
         });
     }
 
-    // POST request - get name
+    // Handle POST request
     else if (req.method === "POST" && req.url === "/submit") {
+
         let body = "";
 
         req.on("data", chunk => {
-            body += chunk.toString();
+            body += chunk;
         });
 
         req.on("end", () => {
             const parsedData = querystring.parse(body);
             userName = parsedData.username;
 
-            // redirect to greeting page
+            // Redirect to greeting page
             res.writeHead(302, { Location: "/greeting" });
             res.end();
         });
     }
 
-    // GET request - display greeting
+    // Greeting page
     else if (req.method === "GET" && req.url === "/greeting") {
+
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(`<h1>Hello, ${userName}!</h1><a href="/">Go Back</a>`);
+
+    }
+
+    else {
+        res.writeHead(404);
+        res.end("Page Not Found");
     }
 
 });
 
 server.listen(3000, () => {
+
     console.log("Server running at http://localhost:3000");
+
+    // Open default browser automatically
+    exec("start http://localhost:3000");
+
 });
